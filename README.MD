@@ -30,6 +30,7 @@ Instale tudo com:
 ```bash
 pip install -r requirements.txt
 
-```bash
+#e execute este comando em seguida
+
 python chat_pdf2.py
 
