@@ -1,0 +1,48 @@
+def parse_mes_ano(pergunta: str) -> Tuple[Optional[str], Optional[int]]:
+    """
+    Retorna (mes_abrev, ano_int) quando encontrado; caso contrário (None, None).
+    Aceita 'junho de 2025', 'jun/2025', 'Jun 2025', '06/2025', etc.
+    """
+    s = pergunta.lower()
+
+    # 'junho de 2025' / 'junho 2025'
+    m1 = re.search(
+        r"(jan(?:eiro)?|fev(?:ereiro)?|mar(?:ço|co)?|abr(?:il)?|mai(?:o)?|jun(?:ho)?|jul(?:ho)?|ago(?:sto)?|set(?:embro)?|out(?:ubro)?|nov(?:embro)?|dez(?:embro)?)\s*(?:de)?\s*(\d{4})",
+        s
+    )
+    if m1:
+        mes_txt = m1.group(1)
+        ano = int(m1.group(2))
+        mes_abbr = MONTH_NAME_TO_ABBR.get(mes_txt, None)
+        return (mes_abbr, ano) if mes_abbr else (None, None)
+
+    # 'jun/2025' ou 'jun-2025'
+    m2 = re.search(r"(jan|fev|mar|abr|mai|jun|jul|ago|set|out|nov|dez)[-/](\d{4})", s)
+    if m2:
+        mes_abbr = MONTH_NAME_TO_ABBR.get(m2.group(1), None)
+        ano = int(m2.group(2))
+        return (mes_abbr, ano) if mes_abbr else (None, None)
+
+    # '06/2025' ou '6/2025'
+    m3 = re.search(r"\b(1[0-2]|0?[1-9])[/-](\d{4})\b", s)
+    if m3:
+        mesN = int(m3.group(1))
+        ano = int(m3.group(2))
+        _, mes_abbr = MONTH_PT[mesN]
+        return (mes_abbr, ano)
+
+    return (None, None)
+
+
+    def build_chroma_filter(empresa_id: int, mes_abbr: Optional[str], ano: Optional[int]) -> Dict[str, Any]:
+    """
+    Monta filtro compatível com Chroma:
+      - 1 condição -> {"campo": {"$eq": valor}}
+      - 2+ condições -> {"$and": [ ... ]}
+    """
+    clauses: List[Dict[str, Any]] = [{"empresa_id": {"$eq": int(empresa_id)}}]
+    if mes_abbr:
+        clauses.append({"mes": {"$eq": mes_abbr}})
+    if ano is not None:
+        clauses.append({"ano": {"$eq": int(ano)}})
+    return clauses[0] if len(clauses) == 1 else {"$and": clauses}
